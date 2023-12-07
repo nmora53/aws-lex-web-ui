@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const webpack = require('webpack');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 const distDir = path.resolve(__dirname, 'dist');
 const assetsDir = path.resolve(__dirname, 'src/assets');
@@ -22,10 +23,10 @@ from the material design icons library
 */
 const favIconPath = `${assetsDir}/favicon.png`;
 const logoPath = `${assetsDir}/logo.png`;
-const flowerLogoPath = path.resolve(
-  __dirname,
-  'node_modules/material-design-icons/maps/2x_web/ic_local_florist_white_18dp.png',
-);
+// const flowerLogoPath = path.resolve(
+//   __dirname,
+//   'node_modules/material-design-icons/maps/2x_web/ic_local_florist_white_18dp.png',
+// );
 
 // HTML page title injected into index.html by webpack
 const pageTitle = 'Lex Web UI';
@@ -85,7 +86,7 @@ function chainWebpackCommon(config, destDir) {
     })
     .end();
 
-  config.devtool((buildType.isProd) ? false : '#source-map');
+  config.devtool(buildType.isProd ? false : 'source-map');
 
   chainWebpackWorker(config, destDir);
 
@@ -96,12 +97,14 @@ function chainWebpackCommon(config, destDir) {
       return args;
     })
     .end();
+
+  config.plugin('NodePolyfillPlugin').use(new NodePolyfillPlugin());
 }
 
 function chainWebpackLib(
   config,
   entryName = 'lex-web-ui',
-  entryFileName = './src/lex-web-ui.js',
+  entryFileName = './src/main.js',
   destDir = 'bundle',
   libraryName = 'LexWebUi',
   format = 'umd',
@@ -204,23 +207,26 @@ function chainWebpackApp(config, destDir = '') {
 
     // copy artifacts to dist directory
     .plugin('copy')
-    .tap((args) => {
-      // unshift to have lower precedence
-      // from the default vue cli `public` rule
-      args[0].unshift(
-        // favicon.png
-        {
-          from: getAssetPath(favIconPath, flowerLogoPath),
-          to: `${distDir}/favicon.png`,
-        },
-        // logo.png
-        {
-          from: getAssetPath(logoPath, flowerLogoPath),
-          to: `${distDir}/logo.png`,
-        },
-      );
-      return args;
-    });
+    // .tap((args) => {
+    //   // unshift to have lower precedence
+    //   // from the default vue cli `public` rule
+    //   const patterns = Array.from(args[0]);
+    //   patterns.unshift(
+    //     // favicon.png
+    //     {
+    //       from: getAssetPath(favIconPath, flowerLogoPath),
+    //       to: `${distDir}/favicon.png`,
+    //     },
+    //     // logo.png
+    //     {
+    //       from: getAssetPath(logoPath, flowerLogoPath),
+    //       to: `${distDir}/logo.png`,
+    //     },
+    //   );
+    //   // eslint-disable-next-line no-param-reassign
+    //   args[0] = { patterns };
+    //   return args;
+    // });
 }
 
 module.exports = {
